@@ -4,8 +4,7 @@
   "main": "server.js",
   "scripts": {
     "test": "nodemon server.js",
-    "start": "node server.js",
-    "build": "[my-framework] build --output public"
+    "start": "node server.js"
   },
   "author": "anujc21",
   "license": "ISC",

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1, user-scalable=no"
+    />
+
+    <link
+      rel="preload"
+      type="font/otf"
+      as="font"
+      href="assets/fonts/font.otf"
+      crossorigin="font"
+    />
+
+    <script src="lib/socket.io.min.js"></script>
+    <script src="lib/phaser.min.js"></script>
+
+    <title>Create Puzzle - Vocabulary Check</title>
+
+    <style>
+      /* CSS Custom Properties for Themes */
+      :root {
+        --bg-color: #ffffff;
+        --container-bg: #f9f9f9;
+        --container-border: #4e316e;
+        --text-color: #4e316e;
+        --scrollbar-thumb: #4e316e;
+        --scrollbar-track: transparent;
+        --button-bg: #4e316e;
+        --button-hover: #3a2450;
+        --border-color: #ccc;
+        --error-color: red;
+      }
+
+      /* Dark Theme */
+      .dark-theme {
+        --bg-color: #121212;
+        --text-color: #e0e0e0;
+        --container-bg: #1e1e1e;
+        --container-border: #bb86fc;
+        --scrollbar-thumb: #bb86fc;
+        --scrollbar-track: #333333;
+        --button-bg: #bb86fc;
+        --button-hover: #9c4dcc;
+        --border-color: #555;
+        --error-color: #ff6b6b;
+      }
+
+      /* Neon Dark Theme */
+      .neon-theme {
+        --bg-color: #000000;
+        --container-bg: #0a0a0a;
+        --container-border: #39ff14;
+        --text-color: #39ff14;
+        --scrollbar-thumb: #39ff14;
+        --scrollbar-track: #000000;
+        --button-bg: #39ff14;
+        --button-hover: #00cc11;
+        --border-color: #39ff14;
+        --error-color: #ff073a;
+      }
+
+      .theme-toggle {
+        background: none;
+        border: none;
+        color: var(--text-color);
+        font-size: 20px;
+        cursor: pointer;
+        padding: 5px;
+        transition: color 0.3s ease;
+      }
+
+      .theme-toggle:hover {
+        color: var(--container-border);
+      }
+    </style>
+
+    <style>
+      @font-face {
+        font-family: RakeslyRG;
+        src: url(assets/fonts/font.otf);
+      }
+
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        display: none;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb);
+        border-radius: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--scrollbar-track);
+      }
+
+      * {
+        font-family: RakeslyRG;
+        user-select: none;
+      }
+
+      html {
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg-color);
+        overflow: auto;
+      }
+
+      .create-container {
+        margin: 20px auto;
+        margin-bottom: 150px;
+        padding: 20px;
+        width: 80%;
+        max-width: 600px;
+        border: 2px solid var(--container-border);
+        border-radius: 10px;
+        background-color: var(--container-bg);
+        text-align: center;
+      }
+
+      .create-container h1 {
+        color: var(--container-border);
+        margin-bottom: 20px;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+        text-align: left;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--text-color);
+        font-weight: bold;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        width: 96%;
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        font-size: 16px;
+      }
+
+      .form-group1 textarea {
+        resize: vertical;
+        min-height: 40px;
+      }
+      .form-group2 textarea {
+        resize: vertical;
+        min-height: 155px;
+      }
+
+      .button {
+        display: inline-block;
+        margin: 10px 5px;
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: var(--button-bg);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      .button:hover {
+        background-color: var(--button-hover);
+      }
+
+      .puzzle-list {
+        margin-top: 20px;
+        text-align: left;
+      }
+
+      .puzzle-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        margin-bottom: 10px;
+        background-color: var(--container-bg);
+      }
+
+      .puzzle-item .actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .puzzle-item .actions button {
+        padding: 5px 10px;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 20px;
+        padding: 0 20px;
+      "
+    >
+      <a
+        href="index.html"
+        style="color: var(--text-color); text-decoration: none; font-size: 18px"
+        >Home</a
+      >
+      <button class="theme-toggle" id="theme-toggle">🌙</button>
+    </div>
+
+    <div id="login-container" class="create-container">
+      <h1>Admin Login</h1>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required />
+        </div>
+        <button type="submit" class="button">Login</button>
+      </form>
+      <div
+        id="login-error"
+        style="color: var(--error-color); margin-top: 10px"
+      ></div>
+    </div>
+
+    <div id="create-container" class="create-container" style="display: none">
+      <h1>Create New Puzzle</h1>
+      <form id="create-form">
+        <div class="form-group">
+          <label for="theme">Theme:</label>
+          <input type="text" id="theme" name="theme" required />
+        </div>
+        <div class="form-group">
+          <label for="spangram"
+            >Spangram (challenge word touching two opposite sides):
+            <span id="spangram-count">0</span></label
+          >
+          <input type="text" id="spangram" name="spangram" required />
+        </div>
+        <div class="form-group">
+          <label for="nonThemeWord"
+            >Non-Theme Word: <span id="nonThemeWord-count">0</span></label
+          >
+          <input type="text" id="nonThemeWord" name="nonThemeWord" required />
+        </div>
+        <div class="form-group form-group1">
+          <label for="words"
+            >Words (comma-separated, 48 letters required):
+            <span id="words-count">0</span></label
+          >
+          <textarea id="words" name="words" required></textarea>
+        </div>
+        <div class="form-group form-group2">
+          <label for="letters"
+            >Letters Grid (rows separated by newlines, columns by spaces, 48
+            letters required): <span id="letters-count">0</span></label
+          >
+          <textarea id="letters" name="letters" required></textarea>
+        </div>
+        <button type="submit" class="button">Create Puzzle</button>
+      </form>
+
+      <div class="puzzle-list">
+        <h2>Existing Puzzles</h2>
+        <div id="puzzle-list"></div>
+      </div>
+    </div>
+
+    <script src="navbar.js"></script>
+    <script src="create.js"></script>
+  </body>
+</html>

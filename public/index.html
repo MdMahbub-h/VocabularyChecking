@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1, user-scalable=no"
+    />
+
+    <link
+      rel="preload"
+      type="font/otf"
+      as="font"
+      href="assets/fonts/font.ttf"
+      crossorigin="font"
+    />
+
+    <script src="lib/socket.io.min.js"></script>
+    <script src="lib/phaser.min.js"></script>
+
+    <title>Vocabulary Check</title>
+
+    <style>
+      /* CSS Custom Properties for Themes */
+      :root {
+        --bg-color: #ffffff;
+        --navbar-bg: #f0f0f0;
+        --navbar-text: #333333;
+        --navbar-hover: #007bff;
+        --hamburger-bg: #333333;
+        --container-bg: #fafafa;
+        --container-border: #007bff;
+        --text-color: #333333;
+        --footer-bg: #f0f0f0;
+        --footer-text-color: #666666;
+        --scrollbar-thumb: #007bff;
+        --scrollbar-track: transparent;
+        --game-bg: #ffffff;
+        --cell-bg: #e0e0e0;
+        --cell-text: #333333;
+        --found-color: #4a90e2;
+        --found-text-color: #ffffff;
+        --hint-color: #28a745;
+        --line-color: #cccccc;
+        --selection-color: #cce7ff;
+        --hint-line-color: #dc3545;
+        --button-bg: #ffffff;
+        --button-text: #007bff;
+        --button-border: #007bff;
+        --hint-display-color: #dc3545;
+        --score-text-color: #333333;
+        --score-plus-color: #28a745;
+        --score-bg: #e9ecef;
+        --score-border: #dee2e6;
+      }
+
+      /* Dark Theme */
+      .dark-theme {
+        --bg-color: #121212;
+        --text-color: #e0e0e0;
+        --navbar-bg: #1e1e1e;
+        --navbar-text: #e0e0e0;
+        --navbar-hover: #bb86fc;
+        --hamburger-bg: #e0e0e0;
+        --container-bg: #1e1e1e;
+        --container-border: #bb86fc;
+        --footer-bg: #1e1e1e;
+        --footer-text-color: #b0b0b0;
+        --scrollbar-thumb: #bb86fc;
+        --scrollbar-track: #333333;
+        --game-bg: #121212;
+        --cell-bg: #2a2a2a;
+        --cell-text: #e0e0e0;
+        --found-color: #5c6bc0;
+        --found-text-color: #ffffff;
+        --hint-color: #81c784;
+        --line-color: #424242;
+        --selection-color: #ffd54f;
+        --hint-line-color: #e57373;
+        --button-bg: #2a2a2a;
+        --button-text: #e0e0e0;
+        --button-border: #bb86fc;
+        --hint-display-color: #e57373;
+        --score-text-color: #e0e0e0;
+        --score-plus-color: #81c784;
+        --score-bg: #2a2a2a;
+        --score-border: #424242;
+      }
+
+      /* Neon Dark Theme */
+      .neon-theme {
+        --bg-color: #000000;
+        --navbar-bg: #0a0a0a;
+        --navbar-text: #39ff14;
+        --navbar-hover: #ff073a;
+        --hamburger-bg: #39ff14;
+        --container-bg: #0a0a0a;
+        --container-border: #39ff14;
+        --text-color: #39ff14;
+        --footer-bg: #0a0a0a;
+        --footer-text-color: #aaaaaa;
+        --scrollbar-thumb: #39ff14;
+        --scrollbar-track: #000000;
+        --game-bg: #000000;
+        --cell-bg: #111111;
+        --cell-text: #39ff14;
+        --found-color: #ff073a;
+        --found-text-color: #ffffff;
+        --hint-color: #ff073a;
+        --line-color: #39ff14;
+        --selection-color: #ff073a;
+        --hint-line-color: #ff073a;
+        --button-bg: #111111;
+        --button-text: #39ff14;
+        --button-border: #39ff14;
+        --hint-display-color: #ff073a;
+        --score-text-color: #39ff14;
+        --score-plus-color: #ff073a;
+        --score-bg: #111111;
+        --score-border: #39ff14;
+      }
+
+      /* Navbar Styles */
+      .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--navbar-bg);
+        padding: 10px 20px;
+        position: relative;
+        z-index: 1000;
+      }
+
+      .navbar .logo {
+        width: 150px;
+        height: 50px;
+      }
+
+      .nav-menu {
+        display: flex;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .nav-menu li {
+        margin-left: 20px;
+      }
+
+      .nav-menu a {
+        color: var(--navbar-text);
+        text-decoration: none;
+        font-size: 18px;
+        transition: color 0.3s ease;
+      }
+
+      .nav-menu a:hover {
+        color: var(--navbar-hover);
+      }
+
+      .menu-row {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 20px;
+        position: absolute;
+        right: 20px;
+        top: 10%;
+        transform: translateY(-50%);
+      }
+
+      .theme-toggle {
+        background: none;
+        border: none;
+        color: var(--navbar-text);
+        font-size: 20px;
+        cursor: pointer;
+        /* padding: 5px; */
+        margin-left: 50px;
+        transition: color 0.3s ease;
+      }
+
+      .theme-toggle:hover {
+        color: var(--navbar-hover);
+      }
+
+      .hamburger {
+        display: none;
+        flex-direction: column;
+        cursor: pointer;
+      }
+
+      .hamburger div {
+        width: 25px;
+        height: 3px;
+        background-color: var(--hamburger-bg);
+        margin: 3px 0;
+        transition: all 0.3s ease;
+      }
+
+      .menu-link {
+        color: var(--navbar-text);
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+
+      .menu-link:hover {
+        color: var(--navbar-hover);
+      }
+
+      /* Responsive Design */
+      @media (max-width: 600px) {
+        .nav-menu {
+          position: absolute;
+          top: 70px;
+          right: 0;
+          width: 50%;
+          background-color: var(--navbar-bg);
+          flex-direction: column;
+          align-items: center;
+          padding: 20px 0;
+          transform: translateY(-100%);
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.3s ease;
+        }
+
+        .nav-menu.active {
+          transform: translateY(0);
+          opacity: 1;
+          visibility: visible;
+        }
+
+        .nav-menu li {
+          margin: 10px 0;
+        }
+
+        .hamburger {
+          display: flex;
+        }
+
+        .hamburger.active div:nth-child(1) {
+          transform: rotate(-45deg) translate(-5px, 6px);
+        }
+
+        .hamburger.active div:nth-child(2) {
+          opacity: 0;
+        }
+
+        .hamburger.active div:nth-child(3) {
+          transform: rotate(45deg) translate(-5px, -6px);
+        }
+      }
+    </style>
+
+    <style>
+      @font-face {
+        font-family: RakeslyRG;
+        src: url(assets/fonts/font.otf);
+      }
+
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        display: none;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb);
+        border-radius: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--scrollbar-track);
+      }
+
+      * {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        font-weight: bold;
+        user-select: none;
+      }
+
+      html {
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg-color);
+        overflow: auto;
+      }
+
+      #loader {
+        display: flex;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        align-items: center;
+        justify-content: center;
+        height: auto;
+        background: none;
+        transform: translate(-50%, -50%);
+      }
+      #loadingImage {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 300px;
+        animation: blink 2s infinite ease-in-out;
+      }
+
+      .scoreBox {
+        margin: 15px 0px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .scoreImageBox {
+        display: flex;
+        align-self: flex-start;
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--score-bg);
+        border-radius: 50%;
+        border: 5px solid var(--score-border);
+      }
+
+      .scoreImage {
+        width: 40%;
+        height: 40%;
+        object-fit: contain;
+      }
+
+      .scoreText {
+        font-size: 25px;
+        color: var(--score-text-color);
+      }
+
+      .scoreTitle {
+        margin: 0px auto 0px 20px;
+        font-size: 40px;
+        font-weight: bold;
+      }
+
+      .scoreTitlePlus {
+        margin: 0px auto 0px 20px;
+        font-size: 40px;
+        font-weight: bold;
+        color: var(--score-plus-color);
+      }
+
+      .scoreValue {
+        font-size: 40px;
+      }
+
+      .scoreValuePlus {
+        font-size: 40px;
+        color: var(--score-plus-color);
+      }
+
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
+      .theme-button {
+        background-color: var(--button-bg);
+        color: var(--button-text);
+        border: 2px solid var(--button-border);
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, color 0.3s ease,
+          border-color 0.3s ease;
+      }
+
+      .theme-button:hover {
+        background-color: var(--button-text);
+        color: var(--button-bg);
+      }
+
+      .theme-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        margin: 20px auto;
+        width: 100%;
+        gap: 20px;
+      }
+
+      #timer-box {
+        padding: 15px;
+        width: 150px;
+        border: 2px solid var(--container-border);
+        border-radius: 10px;
+        background-color: var(--container-bg);
+        text-align: center;
+        color: var(--text-color);
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      #theme-box {
+        padding: 15px;
+        width: 300px;
+        border: 2px solid var(--container-border);
+        border-radius: 10px;
+        background-color: var(--container-bg);
+        text-align: center;
+        color: var(--text-color);
+      }
+
+      #theme-title {
+        margin: 0;
+        color: var(--container-border);
+      }
+
+      #theme-text {
+        margin: 0px 0 0 0;
+        color: var(--hint-color);
+      }
+
+      .theme-toggle {
+        position: absolute;
+        right: 0px;
+        top: 0px;
+        transform: translateY(-50%);
+      }
+
+      .exploreMenu {
+        position: absolute;
+        right: 100px;
+        top: 10%;
+        transform: translateY(-50%);
+      }
+      .leaderBoardMenu {
+        position: absolute;
+        right: 50px;
+        top: 10%;
+        transform: translateY(-50%);
+      }
+
+      /* Win Modal Styles */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+      }
+
+      .modal-content {
+        background-color: var(--container-bg);
+        border: 2px solid var(--container-border);
+        border-radius: 10px;
+        padding: 20px;
+        width: 90%;
+        max-width: 400px;
+        text-align: center;
+        color: var(--text-color);
+      }
+
+      .modal-content h2 {
+        margin-bottom: 20px;
+        color: var(--container-border);
+      }
+
+      .modal-content input {
+        width: 90%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid var(--container-border);
+        border-radius: 5px;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        font-size: 16px;
+      }
+
+      .modal-content button {
+        margin: 10px 5px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      .submit-btn {
+        background-color: var(--button-bg);
+        color: var(--button-text);
+        border: 2px solid var(--button-border);
+      }
+
+      .submit-btn:hover {
+        background-color: var(--button-text);
+        color: var(--button-bg);
+      }
+
+      .skip-btn {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        border: 2px solid var(--container-border);
+      }
+
+      .skip-btn:hover {
+        background-color: var(--container-border);
+        color: var(--bg-color);
+      }
+
+      @media (min-width: 600px) {
+        /* body {
+          background: url(assets/backgrounds/desktop.png) no-repeat center
+            center fixed;
+          -webkit-background-size: cover;
+          -moz-background-size: cover;
+          -o-background-size: cover;
+          background-size: cover;
+        }*/
+      }
+    </style>
+  </head>
+  <body
+    style="
+      font-weight: bold;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    "
+  >
+    <div id="loader">
+      <img
+        id="loadingImage"
+        src="/assets/loader.png"
+        alt="Loading"
+        id="loadingImage"
+      />
+    </div>
+    <div class="theme-container">
+      <div id="theme-box">
+        <h2 id="theme-title"></h2>
+        <h1 id="theme-text"></h1>
+        <div style="font-size: large" id="timer-display">Timer: 00:00</div>
+      </div>
+      <div class="menu-row">
+        <a
+          href="explore.html"
+          class="menu-link exploreMenu"
+          style="font-size: large; font-weight: bold"
+          >Explore</a
+        >
+        <a
+          href="leaderboard.html"
+          class="menu-link leaderBoardMenu"
+          style="font-size: x-large; font-weight: bold"
+          id="leaderboard-link"
+          >🏆</a
+        >
+        <button
+          class="theme-toggle menu-link"
+          style="font-size: x-large"
+          id="theme-toggle"
+        >
+          🌙
+        </button>
+      </div>
+    </div>
+
+    <div
+      id="game-container"
+      style="
+        margin: 20px auto;
+        margin-top: 10px;
+        padding: 20px;
+        padding-bottom: 5px;
+        width: fit-content;
+        border: 2px solid var(--container-border);
+        border-radius: 10px;
+        background-color: var(--container-bg);
+        text-align: center;
+        color: var(--text-color);
+      "
+    >
+      <div id="game"></div>
+
+      <div
+        id="found-words-text"
+        style="
+          font-weight: bold;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          text-align: center;
+          margin: 0px;
+          font-size: 18px;
+          height: 20px;
+        "
+      ></div>
+      <div
+        id="hint-display"
+        style="
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          text-align: center;
+          margin-top: 5px;
+          margin-bottom: 5px;
+          color: var(--hint-display-color);
+          font-size: 24px;
+          font-weight: bold;
+          height: 20px;
+        "
+      ></div>
+      <button
+        id="hint-button"
+        class="theme-button"
+        style="
+          font-weight: bold;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          display: inline-block;
+          margin: 5px 5px;
+          padding: 10px 20px;
+          font-size: 16px;
+        "
+      >
+        Get a hint
+      </button>
+      <button
+        id="next-theme-button"
+        class="theme-button"
+        style="
+          font-weight: bold;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          display: inline-block;
+          margin: 10px 5px;
+          padding: 10px 20px;
+          font-size: 16px;
+        "
+      >
+        Next Theme
+      </button>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal">
+      <div class="modal-content">
+        <h2>Congratulations!</h2>
+        <p>You completed the puzzle in <span id="final-time">00:00</span>!</p>
+        <input
+          type="text"
+          id="username"
+          placeholder="Enter your name"
+          required
+        />
+        <input
+          type="email"
+          id="email"
+          placeholder="Enter your email"
+          required
+        />
+        <button class="submit-btn" id="submit-record">Submit Record</button>
+        <button class="skip-btn" id="skip-submit">Skip</button>
+      </div>
+    </div>
+
+    <script src="navbar.js"></script>
+    <script src="main.js"></script>
+  </body>
+</html>

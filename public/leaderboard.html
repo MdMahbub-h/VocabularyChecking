@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=1, user-scalable=no"
+    />
+
+    <link
+      rel="preload"
+      type="font/ttf"
+      as="font"
+      href="assets/fonts/font.ttf"
+      crossorigin="font"
+    />
+
+    <script src="lib/socket.io.min.js"></script>
+    <script src="lib/phaser.min.js"></script>
+
+    <title>Leaderboard - Vocabulary Check</title>
+
+    <style>
+      /* CSS Custom Properties for Themes */
+      :root {
+        --bg-color: #ffffff;
+        --container-bg: #f9f9f9;
+        --container-border: #4e316e;
+        --text-color: #4e316e;
+        --scrollbar-thumb: #4e316e;
+        --scrollbar-track: transparent;
+        --button-bg: #4e316e;
+        --button-hover: #3a2450;
+        --border-color: #ccc;
+        --error-color: red;
+        --table-header-bg: #4e316e;
+        --table-header-text: #ffffff;
+        --table-row-bg: #f9f9f9;
+        --table-row-alt-bg: #e9ecef;
+        --table-border: #dee2e6;
+      }
+
+      /* Dark Theme */
+      .dark-theme {
+        --bg-color: #121212;
+        --text-color: #e0e0e0;
+        --container-bg: #1e1e1e;
+        --container-border: #bb86fc;
+        --scrollbar-thumb: #bb86fc;
+        --scrollbar-track: #333333;
+        --button-bg: #bb86fc;
+        --button-hover: #9c4dcc;
+        --border-color: #555;
+        --error-color: #ff6b6b;
+        --table-header-bg: #bb86fc;
+        --table-header-text: #121212;
+        --table-row-bg: #1e1e1e;
+        --table-row-alt-bg: #2a2a2a;
+        --table-border: #424242;
+      }
+
+      /* Neon Dark Theme */
+      .neon-theme {
+        --bg-color: #000000;
+        --container-bg: #0a0a0a;
+        --container-border: #39ff14;
+        --text-color: #39ff14;
+        --scrollbar-thumb: #39ff14;
+        --scrollbar-track: #000000;
+        --button-bg: #39ff14;
+        --button-hover: #00cc11;
+        --border-color: #39ff14;
+        --error-color: #ff073a;
+        --table-header-bg: #39ff14;
+        --table-header-text: #000000;
+        --table-row-bg: #0a0a0a;
+        --table-row-alt-bg: #111111;
+        --table-border: #39ff14;
+      }
+
+      .theme-toggle {
+        background: none;
+        border: none;
+        color: var(--text-color);
+        font-size: 20px;
+        cursor: pointer;
+        padding: 5px;
+        transition: color 0.3s ease;
+      }
+
+      .theme-toggle:hover {
+        color: var(--container-border);
+      }
+    </style>
+
+    <style>
+      @font-face {
+        font-family: RakeslyRG;
+        src: url(assets/fonts/font.ttf);
+      }
+
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        display: none;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb);
+        border-radius: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--scrollbar-track);
+      }
+
+      * {
+        font-family: RakeslyRG;
+        user-select: none;
+      }
+
+      html {
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg-color);
+        overflow: auto;
+        color: var(--text-color);
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 20px;
+        padding: 0 20px;
+      }
+
+      .header a {
+        color: var(--text-color);
+        text-decoration: none;
+        font-size: 18px;
+      }
+
+      .header a:hover {
+        color: var(--container-border);
+      }
+
+      .leaderboard-container {
+        margin: 20px auto;
+        padding: 20px;
+        width: 80%;
+        max-width: 800px;
+        border: 2px solid var(--container-border);
+        border-radius: 10px;
+        background-color: var(--container-bg);
+        text-align: center;
+      }
+
+      .leaderboard-container h1 {
+        color: var(--container-border);
+        margin-bottom: 20px;
+      }
+
+      .leaderboard-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+
+      .leaderboard-table th,
+      .leaderboard-table td {
+        padding: 12px;
+        text-align: center;
+        border: 1px solid var(--table-border);
+      }
+
+      .leaderboard-table th {
+        background-color: var(--table-header-bg);
+        color: var(--table-header-text);
+        font-weight: bold;
+      }
+
+      .leaderboard-table tr:nth-child(even) {
+        background-color: var(--table-row-alt-bg);
+      }
+
+      .leaderboard-table tr:nth-child(odd) {
+        background-color: var(--table-row-bg);
+      }
+
+      .no-data {
+        font-size: 18px;
+        color: var(--text-color);
+        margin-top: 20px;
+      }
+
+      @media (max-width: 600px) {
+        .leaderboard-container {
+          width: 95%;
+          padding: 15px;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+          padding: 8px;
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <a style="font-size: x-large" href="index.html">Home</a>
+      <button class="theme-toggle" id="theme-toggle">🌙</button>
+    </div>
+
+    <div class="leaderboard-container">
+      <h1 id="leaderboard-title">🏆 Leaderboard</h1>
+      <table class="leaderboard-table" id="leaderboard-table">
+        <thead>
+          <tr>
+            <th style="font-size: x-large">Rank</th>
+            <th style="font-size: x-large">Name</th>
+            <th style="font-size: x-large">Time</th>
+            <th style="font-size: x-large">Email</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+          <!-- Leaderboard rows will be inserted here -->
+        </tbody>
+      </table>
+      <div id="no-data" class="no-data" style="display: none">
+        No leaderboard data available.
+      </div>
+    </div>
+
+    <script src="navbar.js"></script>
+    <script>
+      // Load saved theme
+      const savedTheme2 = localStorage.getItem("theme") || "";
+      document.body.className = savedTheme2;
+
+      // Theme toggle
+      const themeToggle = document.getElementById("theme-toggle");
+      const body = document.body;
+      const themes = ["", "dark-theme", "neon-theme"];
+      const themeIcons = ["🌙", "🌞", "⚡"];
+
+      const currentIndex = themes.indexOf(savedTheme2);
+      themeToggle.textContent = themeIcons[currentIndex];
+
+      themeToggle.addEventListener("click", function () {
+        const currentTheme = body.className;
+        const currentIndex = themes.indexOf(currentTheme);
+        const nextIndex = (currentIndex + 1) % themes.length;
+        const nextTheme = themes[nextIndex];
+
+        body.className = nextTheme;
+        themeToggle.textContent = themeIcons[nextIndex];
+        localStorage.setItem("theme", nextTheme);
+      });
+
+      // Get puzzle index from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const puzzleIndex = urlParams.get("puzzle") || 0;
+
+      // Fetch puzzle data to get theme
+      fetch(`/api/puzzles/${parseInt(puzzleIndex) + 1}`)
+        .then((response) => response.json())
+        .then((puzzle) => {
+          document.getElementById(
+            "leaderboard-title"
+          ).textContent = `🏆 Leaderboard for ${puzzle.theme}`;
+        })
+        .catch((error) => {
+          console.error("Error fetching puzzle:", error);
+          document.getElementById(
+            "leaderboard-title"
+          ).textContent = `🏆 Leaderboard for Puzzle ${
+            parseInt(puzzleIndex) + 1
+          }`;
+        });
+
+      // Socket connection for leaderboard
+      const socket = io();
+
+      socket.emit("leaderboard", puzzleIndex);
+
+      socket.on("leaderboard", (scores) => {
+        const tbody = document.getElementById("leaderboard-body");
+        const noData = document.getElementById("no-data");
+        tbody.innerHTML = "";
+
+        if (!scores || Object.keys(scores).length === 0) {
+          noData.style.display = "block";
+          return;
+        }
+
+        noData.style.display = "none";
+
+        // Sort scores by time (assuming score is time in seconds, lower is better)
+        const sortedScores = Object.values(scores).sort(
+          (a, b) => a.score - b.score
+        );
+
+        sortedScores.forEach((score, index) => {
+          const row = document.createElement("tr");
+          const rank = index + 1;
+          const timeFormatted = formatTime(score.score);
+
+          row.innerHTML = `
+            <td style="font-size: x-large">${rank}</td>
+            <td style="font-size: x-large">${score.username}</td>
+            <td style="font-size: x-large">${timeFormatted}</td>
+            <td style="font-size: x-large">${score.email}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      });
+
+      function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+      }
+    </script>
+  </body>
+</html>

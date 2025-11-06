@@ -1,0 +1,29 @@
+1. Hosting the game
+   upload the game folder in c-panel and extract the folder
+   then create a node.js app, select domain or subdomain and the game folder
+   then run code npm install and then npm start
+   the game will run on domain or subdomain
+2. WordPress Integration
+   create a page in wordpress for the game
+   Insert iframe via Elementor HTML widget or shortcode.
+   Ensure HTTPS is enabled for Firebase and game.
+   then game will be available in wordpress.
+   example code:
+   // functions.php
+   function embed_phaser_game() {
+   $iframe = '<iframe 
+           src="https://yourappname.com" 
+           width="800" height="600" 
+           style="border:none;overflow:hidden;" 
+           allowfullscreen
+           loading="lazy"></iframe>';
+   return $iframe;
+   }
+   add_shortcode('phaser_game', 'embed_phaser_game');
+
+for run in localhost:
+extact the game folder and open terminal in the folder
+run command
+npm install
+npm start
+the game will be hosted on localhost:3002 port

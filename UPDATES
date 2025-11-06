@@ -1,0 +1,16 @@
+1. A portion of the puzzle is currently being cutoff by the bottom gray message bar. I assume this is cutting of some of the puzzle information.
+
+2. The bottom gray message is really not needed. This will be inserted into a wordpress page and not stand alone. The wordpress page will have the necessary information.
+
+3. The overall look is very basic and needs to more modernized and standout a bit more. Replace the blue wire frame with something a frame that is a bit more graphical/defined. If you have some options that I can choose from that are readily available that is a good place to start. Perhaps have each letter in more of a 3D block so they have some dimension.
+
+4. Dragging is the only way to select letters. Users should also be able to click each letter.
+
+5. In the animal puzzle, the word CAT was selectable as part of the puzzle. Words can only be 4 letters or above to count for this game. So it violates the rule.
+
+6. Can you please make the admin login interface better with username and password. Not simple one.
+
+7. I do not see a way for users to register or record themselves onto a leaderboard.
+
+8. Themes/categories should be able to have multiple puzzles within them. I cannot tell if that is possible.
+Mahabub also remove Create button from the game it needs to be hidden from users. We need to make it like adminpanel not create. and have separate link to access thi.

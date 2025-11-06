@@ -1,0 +1,7 @@
+Below are some initial items that need to be addressed:
+
+3. The overall look is very basic and needs to more modernized and standout a bit more. Replace the blue wire frame with something a frame that is a bit more graphical/defined. If you have some options that I can choose from that are readily available that is a good place to start. Perhaps have each letter in more of a 3D block so they have some dimension.
+
+4. Dragging is the only way to select letters. Users should also be able to click each letter.
+
+in main.js when game win, Player will get a form for name and email and there will show how much time he took to solve the puzzle. Player can fill the form and submit it for add his puzzle solving time in leaderboard and play next puzzle or he can skip and start next puzzle also create leaderboard page and open it when leaderboard menu is clicked in index.html
